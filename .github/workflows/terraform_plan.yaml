@@ -21,7 +21,7 @@ jobs:
       contents: read
       pull-requests: write
     outputs:
-      plan_output: ${{ steps.plan.outputs.plan_output }}
+      plan_file: ${{ steps.plan.outputs.plan_file }}
     defaults:
       run:
         shell: bash
@@ -92,6 +92,6 @@ jobs:
         -out=tfplan \
         echo "Terraform plan created successfully."
         cat tfplan
-        echo "::setOutput name=plan_output::$(cat tfplan)"
+        echo "::setOutput name=plan_file::$(cat tfplan)"
 
 #TODO ENSURE GCP IS SETUP CORRECTLY

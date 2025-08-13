@@ -16,6 +16,8 @@ on:
       
 
 jobs:
+  determine_provider:
+    uses: ./.github/workflows/_determine_provider.yaml
   terraform:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
@@ -32,10 +34,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-
-    - name: Determine Provider
-      id: determine_provider
-      uses: ./.github/workflows/_determine_provider.yaml
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1

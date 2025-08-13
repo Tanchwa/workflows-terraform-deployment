@@ -19,6 +19,8 @@ on:
         type: string
 
 jobs:
+  determine_provider:
+    uses: ./.github/workflows/_determine_provider.yaml
   terraform:
     name: 'Terraform Apply'
     runs-on: ubuntu-latest
@@ -33,10 +35,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-
-    - name: Determine Provider
-      id: determine_provider
-      uses: Tanchwa/workflows-terraform-deployment/.github/workflows/_determine_provider.yaml@main
 
     - name: Authenticate Azure
       if: steps.determine_provider.outputs.azure == 'true'

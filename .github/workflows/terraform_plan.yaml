@@ -89,7 +89,7 @@ jobs:
       if: needs.determine_provider.outputs.gcp == 'true'
       run: |
         terraform init \
-        -backend-config="bucket=${{ secrets.GOOGLE_STATE_BUCKET }}" 
+        -backend-config="bucket=${{ secrets.GOOGLE_STATE_BUCKET }}" \
         -backend-config="prefix=terraform/state" 
 
 
@@ -100,6 +100,6 @@ jobs:
       run: |
         terraform plan -input=false \
         -out=tfplan \
-        echo "Terraform plan created successfully."
-        cat tfplan
+        echo "Terraform plan created successfully." \
+        cat tfplan \
         echo "::setOutput name=plan_file::$(cat tfplan)"

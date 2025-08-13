@@ -36,7 +36,7 @@ jobs:
 
     - name: Determine Provider
       id: determine_provider
-      uses: ./.github/workflows/_determine_provider.yaml
+      uses: Tanchwa/workflows-terraform-deployment/.github/workflows/_determine_provider.yaml@main
 
     - name: Authenticate Azure
       if: steps.determine_provider.outputs.azure == 'true'

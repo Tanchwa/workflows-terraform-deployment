@@ -1,4 +1,4 @@
-name: _terraform_plan
+name: terraform_plan
 
 on:
   workflow_call:
@@ -82,26 +82,19 @@ jobs:
       with:
         workload_identity_provider: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+        create_credentials_file: true
         token_format: "access_token"
 
     - name: Terraform Init GCP
       if: steps.determine_provider.outputs.gcp == 'true'
       run: |
         terraform init \
-        -backend-config="bucket=${{ secrets.TF_GCP_STATE_BUCKET }}" 
+        -backend-config="bucket=${{ secrets.GOOGLE_STATE_BUCKET }}" 
 
 
     ## we run the same plan command for all providers to get the plan output
     - name: Terraform Plan
       id: plan
-      env:
-        ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-        ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-        ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
       run: |
         terraform plan -input=false \
         -out=tfplan \

@@ -80,8 +80,8 @@ jobs:
       if: steps.determine_provider.outputs.gcp == 'true'
       uses: google-github-actions/auth@v2.1.12
       with:
-        workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+        workload_identity_provider: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
         token_format: "access_token"
 
     - name: Terraform Init GCP

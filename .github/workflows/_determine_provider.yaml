@@ -19,7 +19,7 @@ on:
 jobs:
   provider:
     env:
-      GCP: ${{ secrets.GCP_CREDENTIALS }}
+      GCP: ${{ secrets.GOOGLE_CREDENTIALS }}
       AWS: ${{ secrets.AWS_ACCESS_KEY }}
       AZURE: ${{ secrets.AZURERM_CLIENT_ID }}
     runs-on: ubuntu-latest

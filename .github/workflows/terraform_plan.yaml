@@ -70,7 +70,7 @@ jobs:
     - name: Terraform Init GCP
       if: steps.determine_provider.outputs.gcp == 'true'
       env:
-        GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
       run: |
         terraform init \
         -backend-config="bucket=${{ secrets.TF_GCP_STATE_BUCKET }}" 
@@ -86,7 +86,7 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
       run: |
         terraform plan -input=false \
         -out=tfplan \

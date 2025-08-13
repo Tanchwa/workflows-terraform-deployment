@@ -93,6 +93,7 @@ jobs:
 
 
     ## we run the same plan command for all providers to get the plan output
+    #TODO add plan output as a comment in pull request
     - name: Terraform Plan
       id: plan
       run: |

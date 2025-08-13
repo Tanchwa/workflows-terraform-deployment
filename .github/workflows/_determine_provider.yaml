@@ -35,12 +35,12 @@ jobs:
       - id: gcp
         run: |
           if [ -n "$GCP" ]; then echo "gcp=true" >> $GITHUB_OUTPUT ; else echo "gcp=false" >> $GITHUB_OUTPUT ; fi && \
-          echo $GITHUB_OUTPUT
+          echo ${{ steps.gcp.outputs.gcp }}
       - id: aws
         run: | 
           if [ -n "$AWS" ]; then echo "aws=true" >> $GITHUB_OUTPUT ; else echo "aws=false" >> $GITHUB_OUTPUT ; fi && \
-          echo $GITHUB_OUTPUT
+          echo ${{ steps.aws.outputs.aws }}
       - id: azure
         run: | 
           if [ -n "$AZURE" ]; then echo "azure=true" >> $GITHUB_OUTPUT ; else echo "azure=false" >> $GITHUB_OUTPUT ; fi && \
-          echo $GITHUB_OUTPUT
+          echo ${{ steps.azure.outputs.azure }}

@@ -36,7 +36,6 @@ jobs:
     - name: Determine Provider
       id: determine_provider
       uses: ./.github/workflows/_determine_provider.yaml
-      secrets: inherit
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1

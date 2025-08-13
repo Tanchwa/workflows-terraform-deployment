@@ -36,6 +36,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3.1.2
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
     - name: Authenticate Azure
       if: steps.determine_provider.outputs.azure == 'true'
       uses: azure/login@v2

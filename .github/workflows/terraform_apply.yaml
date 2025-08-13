@@ -47,7 +47,10 @@ on:
 jobs:
   determine_provider:
     uses: ./.github/workflows/_determine_provider.yaml
-    secrets: inherit
+    secrets: 
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+      AZURERM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
   terraform:
     name: 'Terraform Apply'
     runs-on: ubuntu-latest

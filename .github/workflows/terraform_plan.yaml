@@ -7,10 +7,12 @@ on:
         description: 'Terraform version to use'
         required: true
         default: '1.13'
+        type: string
       working_directory:
         description: 'Directory containing Terraform configuration files'
         required: true
         default: '.'
+        type: string
       
 
 jobs:

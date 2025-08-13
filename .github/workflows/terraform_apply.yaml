@@ -7,13 +7,16 @@ on:
         description: 'Terraform version to use'
         required: true
         default: '1.13'
+        type: string
       working_directory:
         description: 'Directory containing Terraform configuration files'
         required: true
         default: '.'
+        type: string
       terraform_plan_file:
         description: 'Terraform plan output from a successfull plan'
         required: true
+        type: string
 
 jobs:
   terraform:

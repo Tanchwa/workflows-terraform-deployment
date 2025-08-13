@@ -54,6 +54,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      id-token: write
     outputs:
       plan_file: ${{ steps.plan.outputs.plan_file }}
     defaults:

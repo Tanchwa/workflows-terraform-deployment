@@ -42,7 +42,7 @@ jobs:
         terraform_version: ${{ inputs.terraform_version }}
 
     - name: Authenticate Azure
-      if: steps.determine_provider.outputs.azure == 'true'
+      if: needs.determine_provider.outputs.azure == 'true'
       uses: azure/login@v2
       with:
         client-id: ${{ secrets.ARM_CLIENT_ID }}
@@ -51,7 +51,7 @@ jobs:
         enable-AzPsession: true
 
     - name: Terraform Init Azure
-      if: steps.determine_provider.outputs.azure == 'true'
+      if: needs.determine_provider.outputs.azure == 'true'
       env:
         ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
         ARM_USE_OIDC: true
@@ -64,7 +64,7 @@ jobs:
         -backend-config="key=terraform.tfstate" \
 
 #    - name: Terraform Init AWS
-#      if: steps.determine_provider.outputs.aws == 'true'
+#      if: needs.determine_provider.outputs.aws == 'true'
 #      env:
 #        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 #        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -77,7 +77,7 @@ jobs:
 #
 
     - name: Authenticate GCP
-      if: steps.determine_provider.outputs.gcp == 'true'
+      if: needs.determine_provider.outputs.gcp == 'true'
       uses: google-github-actions/auth@v2.1.12
       with:
         workload_identity_provider: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
@@ -86,7 +86,7 @@ jobs:
         token_format: "access_token"
 
     - name: Terraform Init GCP
-      if: steps.determine_provider.outputs.gcp == 'true'
+      if: needs.determine_provider.outputs.gcp == 'true'
       run: |
         terraform init \
         -backend-config="bucket=${{ secrets.GOOGLE_STATE_BUCKET }}" 

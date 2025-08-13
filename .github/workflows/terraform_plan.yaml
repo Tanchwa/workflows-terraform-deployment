@@ -6,7 +6,7 @@ on:
       terraform_version:
         description: 'Terraform version to use'
         required: true
-        default: '1.13'
+        default: '1.12'
         type: string
       working_directory:
         description: 'Directory containing Terraform configuration files'

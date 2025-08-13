@@ -40,7 +40,8 @@ on:
         required: false
       GOOGLE_SERVICE_ACCOUNT_EMAIL:
         required: false
-      
+      GOOGLE_STATE_BUCKET:
+        required: false
 
 
 jobs:

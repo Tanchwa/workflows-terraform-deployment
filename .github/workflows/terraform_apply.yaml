@@ -17,6 +17,31 @@ on:
         description: 'Terraform plan output from a successfull plan'
         required: true
         type: string
+    secrets:
+      ARM_CLIENT_ID:
+        required: false
+      ARM_TENANT_ID:
+        required: false
+      ARM_SUBSCRIPTION_ID:
+        required: false
+      AZ_STATE_STORE:
+        required: false
+      AZ_STATE_CONTAINER:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+      AWS_STATE_BUCKET:
+        required: false
+      AWS_STATE_REGION:
+        required: false
+      GOOGLE_WORKLOAD_IDENTITY_PROVIDER:
+        required: false
+      GOOGLE_SERVICE_ACCOUNT_EMAIL:
+        required: false
+      
+
 
 jobs:
   determine_provider:

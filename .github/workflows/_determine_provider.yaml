@@ -3,7 +3,7 @@ name: _determine_provider
 on:
   workflow_call:
     secrets:
-      AWS_ACCESS_KEY:
+      AWS_IAM_ROLE_ARN:
         required: false
       GOOGLE_SERVICE_ACCOUNT_EMAIL:
         required: false
@@ -20,7 +20,7 @@ jobs:
   provider:
     env:
       GCP: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-      AWS: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS: ${{ secrets.AWS_IAM_ROLE_ARN }}
       AZURE: ${{ secrets.AZURERM_CLIENT_ID }}
     runs-on: ubuntu-latest
     outputs:

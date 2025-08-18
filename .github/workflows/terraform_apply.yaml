@@ -28,9 +28,7 @@ on:
         required: false
       AZ_STATE_CONTAINER:
         required: false
-      AWS_ACCESS_KEY_ID:
-        required: false
-      AWS_SECRET_ACCESS_KEY:
+      AWS_IAM_ROLE_ARN:
         required: false
       AWS_STATE_BUCKET:
         required: false
@@ -48,7 +46,7 @@ jobs:
   determine_provider:
     uses: ./.github/workflows/_determine_provider.yaml
     secrets: 
-      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
       GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       AZURERM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
   terraform:
@@ -96,18 +94,23 @@ jobs:
         -backend-config="container_name=${{ secrets.AZ_STATE_CONTAINER }}" \
         -backend-config="key=terraform.tfstate" \
 
-#    - name: Terraform Init AWS
-#      if: needs.determine_provider.outputs.aws == 'true'
-#      env:
-#        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#      run: |
-#        terraform init \
-#        -backend-config="bucket=${{ secrets.AWS_STATE_BUCKET }}" \
-#        -backend-config="key=terraform.tfstate" \
-#        -backend-config="region=${{ secrets.AWS_STATE_REGION }}" \
-#        -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY }}" \
-#
+    - name: Authenticate AWS
+      if: needs.determine_provider.outputs.aws == 'true'
+      uses: aws-actions/configure-aws-credentials@v2.0.0
+      with:
+        role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_STATE_REGION }}
+        role-session-name: 'GitHubActionsSession'
+
+
+    - name: Terraform Init AWS
+      if: needs.determine_provider.outputs.aws == 'true'
+      run: |
+        terraform init \
+        -backend-config="bucket=${{ secrets.AWS_STATE_BUCKET }}" \
+        -backend-config="key=terraform.tfstate" \
+        -backend-config="region=${{ secrets.AWS_STATE_REGION }}" \
+
 
     - name: Authenticate GCP
       if: needs.determine_provider.outputs.gcp == 'true'

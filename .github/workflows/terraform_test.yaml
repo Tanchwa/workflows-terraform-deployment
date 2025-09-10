@@ -1,0 +1,296 @@
+name: terraform_test
+
+on:
+  workflow_call:
+    inputs:
+      test_level:
+        description: -<
+          'Type of Dynamic Test to use. 
+          If running tests on a module, use type unit.
+          If running on a full terraform workspace, use integration.
+          Static file and security analyisis tests will always run.'
+        type: choice
+        options:
+          - unit
+          - integration
+      terraform_version:
+        description: 'Terraform version to use'
+        required: true
+        default: '1.12'
+        type: string
+      working_directory:
+        description: 'Directory containing Terraform configuration files'
+        required: true
+        default: '.'
+        type: string
+    secrets:
+      INFRACOST_API_KEY:
+        required: false
+      ARM_CLIENT_ID:
+        required: false
+      ARM_TENANT_ID:
+        required: false
+      ARM_SUBSCRIPTION_ID:
+        required: false
+      AZ_STATE_STORE:
+        required: false
+      AZ_STATE_CONTAINER:
+        required: false
+      AWS_IAM_ROLE_ARN:
+        required: false
+      AWS_STATE_BUCKET:
+        required: false
+      AWS_STATE_REGION:
+        required: false
+      GOOGLE_WORKLOAD_IDENTITY_PROVIDER:
+        required: false
+      GOOGLE_SERVICE_ACCOUNT_EMAIL:
+        required: false
+      GOOGLE_STATE_BUCKET:
+        required: false
+
+
+jobs:
+  determine_provider:
+    uses: ./.github/workflows/_determine_provider.yaml
+    secrets: 
+      AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+      AZURERM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
+  static_analysis:
+    name: 'Terraform Static Analysis'
+    runs-on: ubuntu-latest
+    needs: 
+      - determine_provider
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3.1.2
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+
+      - name: Terraform Format Check
+        run: |
+          terraform fmt -check -recursive
+          if [ $? -ne 0 ]; then
+            echo "::error::Terraform files are not formatted correctly"
+            exit 1
+          fi
+
+      # Will eventually update so that the workflow can make automatic code changes after formatting
+
+      - name: Terraform Validate
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Run TFLint
+        run: |
+          tflint --init
+          tflint --format=junit > tflint-results.xml
+
+      - name: Setup and Run Checkov
+        run: |
+          pip install checkov
+          checkov -d . --framework terraform --output junit --output-file checkov-results.xml || true
+
+      - name: Setup and Run TFSec
+        run: |
+          curl -sSL https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -o tfsec
+          chmod +x tfsec
+          ./tfsec . --format junit --out tfsec-results.xml || true
+
+      - name: Run Infracost
+        uses: infracost/actions/setup@v2
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+      
+      - name: Generate Cost Estimate
+        run: |
+          infracost breakdown --path . --format json --out-file infracost.json || true
+          if [ -f infracost.json ]; then
+            infracost output --path infracost.json --format github-comment --out-file cost-comment.md
+          fi
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: static-analysis-${{ github.run_id }}
+          path: |
+            results.xml
+            infracost.json
+            cost-comment.md
+
+  # Stage 3: Security and Compliance
+  security_compliance:
+    name: Security & Compliance
+    runs-on: ubuntu-latest
+    needs:
+      - determine_provider
+      - static_analysis
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+ 
+      - name: Terraform Compliance
+        run: |
+          pip install terraform-compliance
+          
+          # Run compliance tests if feature files exist
+          if [ -d "../features" ]; then
+            terraform-compliance -p tfplan -f ../features --junit-xml compliance-results.xml || true
+          fi
+
+      - name: Upload Security Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-compliance-${{ github.run_id }}
+          path: |
+            compliance-results.xml
+
+  unit_tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    if: ${{ inputs.type == 'unit' }}
+    needs: 
+      - determine_provider
+      - static_analysis
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Authenticate Azure
+        if: needs.determine_provider.outputs.azure == 'true'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          enable-AzPsession: true
+
+      - name: Authenticate AWS
+        if: needs.determine_provider.outputs.aws == 'true'
+        uses: aws-actions/configure-aws-credentials@v2.0.0
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_STATE_REGION }}
+          role-session-name: 'GitHubActionsSession'
+
+      - name: Authenticate GCP
+        if: needs.determine_provider.outputs.gcp == 'true'
+        uses: google-github-actions/auth@v2.1.12
+        with:
+          workload_identity_provider: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          create_credentials_file: true
+          token_format: "access_token"
+
+      - name: Run Terraform Native Tests
+        run: |
+          terraform test -junit-xml=terraform-test-results.xml
+
+      - name: Upload Unit Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-tests-${{ github.run_id }}
+          path: |
+            terraform-test-results.xml
+
+  integration_tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: 
+      - setup
+      - static_analysis
+      - security_compliance
+    if: ${{ inputs.test_level == 'integration' }}
+    uses: ./.github/workflows/terraform_plan.yaml
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    secrets: 
+      AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+      AZURERM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
+  test_results:
+    name: Test Results & Reporting
+    runs-on: ubuntu-latest
+    needs: 
+      - static_analysis
+        #- security_compliance 
+      - unit_tests
+      - integration_tests
+    if: always()
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Terraform Test Results
+          path: '**/*-results.xml'
+          reporter: java-junit
+
+      - name: Generate Test Summary
+        run: |
+          echo "## Terraform Testing Framework Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count test files
+          STATIC_TESTS=$(find test-results -name "*-results.xml" -path "*/static-analysis-*" | wc -l)
+          #SECURITY_TESTS=$(find test-results -name "*-results.xml" -path "*/security-compliance-*" | wc -l)
+          UNIT_TESTS=$(find test-results -name "*-results.xml" -path "*/unit-tests-*" | wc -l)
+          INTEGRATION_TESTS=$(find test-results -name "*-results.xml" -path "*/integration-tests-*" | wc -l)
+          
+          echo "| Test Type | Files Processed |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-----------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Static Analysis | $STATIC_TESTS |" >> $GITHUB_STEP_SUMMARY
+          #echo "| Security & Compliance | $SECURITY_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | $UNIT_TESTS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | $INTEGRATION_TESTS |" >> $GITHUB_STEP_SUMMARY

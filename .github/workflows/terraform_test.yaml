@@ -81,6 +81,9 @@ jobs:
         with:
           terraform_version: ${{ inputs.terraform_version }}
 
+      - name: Make Test Directory
+        run: mkdir -p tests
+
       - name: Terraform Format Check
         run: |
           terraform fmt -check -recursive
@@ -104,29 +107,29 @@ jobs:
       - name: Run TFLint
         run: |
           tflint --init
-          tflint --format=junit > tflint-results.xml
+          tflint --format=junit > tests/tflint-results.xml
 
       - name: Setup and Run Checkov
         run: |
           pip install checkov
-          checkov -d . --framework terraform --output junit --output-file checkov-results.xml || true
+          checkov -d . --framework terraform --output junit --output-file tests/checkov-results.xml || true
 
       - name: Setup and Run TFSec
         run: |
           curl -sSL https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -o tfsec
           chmod +x tfsec
-          ./tfsec . --format junit --out tfsec-results.xml || true
+          ./tfsec . --format junit --out tests/tfsec-results.xml || true
 
       - name: Run Infracost
         uses: infracost/actions/setup@v2
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
-      
+
       - name: Generate Cost Estimate
         run: |
           infracost breakdown --path . --format json --out-file infracost.json || true
           if [ -f infracost.json ]; then
-            infracost output --path infracost.json --format github-comment --out-file cost-comment.md
+            infracost output --path tests/infracost.json --format github-comment --out-file tests/cost-comment.md
           fi
 
       - name: Upload Test Results
@@ -134,10 +137,7 @@ jobs:
         if: always()
         with:
           name: static-analysis-${{ github.run_id }}
-          path: |
-            *-results.xml
-            infracost.json
-            cost-comment.md
+          path: tests/*
 
   # Stage 3: Security and Compliance
   security_compliance:
@@ -159,13 +159,16 @@ jobs:
         with:
           terraform_version: ${{ inputs.terraform_version }}
 
+      - name: Create Test Directory
+        run: mkdir -p tests
+
       - name: Terraform Compliance
         run: |
           pip install terraform-compliance
 
           # Run compliance tests if feature files exist
           if [ -d "../features" ]; then
-            terraform-compliance -p tfplan -f ../features --junit-xml compliance-results.xml || true
+            terraform-compliance -p tfplan -f ../features --junit-xml tests/compliance-results.xml || true
           fi
 
       - name: Upload Security Results
@@ -173,8 +176,7 @@ jobs:
         if: always()
         with:
           name: security-compliance-${{ github.run_id }}
-          path: |
-            compliance-results.xml
+          path: tests/compliance-results.xml
 
   unit_tests:
     name: Unit Tests
@@ -199,6 +201,9 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Create Test Directory
+        run: mkdir -p tests
 
       - name: Authenticate Azure
         if: needs.determine_provider.outputs.azure == 'true'
@@ -228,15 +233,14 @@ jobs:
 
       - name: Run Terraform Native Tests
         run: |
-          terraform test -junit-xml=terraform-test-results.xml
+          terraform test -junit-xml=tests/terraform-test-results.xml
 
       - name: Upload Unit Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: unit-tests-${{ github.run_id }}
-          path: |
-            terraform-test-results.xml
+          path: tests/terraform-test-results.xml
 
   integration_tests:
     name: Integration Tests
@@ -260,7 +264,7 @@ jobs:
   test_results:
     name: Test Results & Reporting
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - static_analysis
       - security_compliance
       - unit_tests

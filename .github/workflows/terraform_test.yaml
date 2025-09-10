@@ -277,7 +277,9 @@ jobs:
           path: test-results
 
       - name: list files for test
-        run: ls -R .
+        run: |
+          ls -R . && \
+          pwd
 
       - name: Publish Test Results
         uses: dorny/test-reporter@v1

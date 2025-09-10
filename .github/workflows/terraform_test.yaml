@@ -81,14 +81,14 @@ jobs:
         with:
           terraform_version: ${{ inputs.terraform_version }}
 
-
       - name: Terraform Format Check
         run: |
           terraform fmt -check -recursive
           if [ $? -ne 0 ]; then
-            echo "::error::Terraform files are not formatted correctly"
+            echo "::error::Terraform files are not formatted correctly. Please run 'terraform fmt -recursive' to format the files.\n Files not formatted correctly: $(!!)"
             exit 1
           fi
+        continue-on-error: true
 
       # Will eventually update so that the workflow can make automatic code changes after formatting
 

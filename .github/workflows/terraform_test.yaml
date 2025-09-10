@@ -250,6 +250,9 @@ jobs:
       AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
       GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       AZURERM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    with:
+      terraform_version: ${{ inputs.terraform_version }}
+      working_directory: ${{ inputs.working_directory }}
 
   test_results:
     name: Test Results & Reporting

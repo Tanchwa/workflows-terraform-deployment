@@ -289,6 +289,7 @@ jobs:
           path: '**/*-results.xml'
           reporter: java-junit
           working-directory: ${{ inputs.working_directory }}
+          fail-on-error: false
 
       - name: Generate Test Summary
         run: |

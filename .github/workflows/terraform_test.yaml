@@ -144,6 +144,10 @@ jobs:
   security_compliance:
     name: Security & Compliance
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
     needs:
       - determine_provider
       - static_analysis
@@ -263,6 +267,10 @@ jobs:
       - unit_tests
       - integration_tests
     if: always()
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
     steps:
       - name: Download All Artifacts
         uses: actions/download-artifact@v4

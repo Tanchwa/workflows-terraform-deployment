@@ -276,13 +276,8 @@ jobs:
         with:
           path: test-results
 
-      - name: list files for test
-        run: |
-          ls -R . && \
-          pwd
-
       - name: Publish Test Results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v4
         if: success() || failure()
         with:
           name: Terraform Test Results

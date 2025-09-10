@@ -127,7 +127,7 @@ jobs:
 
       - name: Generate Cost Estimate
         run: |
-          infracost breakdown --path . --format json --out-file infracost.json || true
+          infracost breakdown --path . --format json --out-file tests/infracost.json || true
           if [ -f infracost.json ]; then
             infracost output --path tests/infracost.json --format github-comment --out-file tests/cost-comment.md
           fi

@@ -9,10 +9,9 @@ on:
           If running tests on a module, use type unit.
           If running on a full terraform workspace, use integration.
           Static file and security analyisis tests will always run.'
-        type: choice
-        options:
-          - unit
-          - integration
+        type: string
+        required: true
+        default: 'unit'
       terraform_version:
         description: 'Terraform version to use'
         required: true

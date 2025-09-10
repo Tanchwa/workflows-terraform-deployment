@@ -277,13 +277,13 @@ jobs:
           path: test-results
 
       - name: Publish Test Results
-        uses: dorny/test-reporter@v4
+        uses: dorny/test-reporter@v2
         if: success() || failure()
         with:
           name: Terraform Test Results
           path: '**/*-results.xml'
           reporter: java-junit
-          working-directory: ${{ inputs.working_directory }}
+          working-directory: ${{ github.workspace }}
 
       - name: Generate Test Summary
         run: |

@@ -88,7 +88,6 @@ jobs:
             echo "::error::Terraform files are not formatted correctly. Please run 'terraform fmt -recursive' to format the files.\n Files not formatted correctly: $(!!)"
             exit 1
           fi
-        continue-on-error: true
 
       # Will eventually update so that the workflow can make automatic code changes after formatting
 
@@ -276,6 +275,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: test-results
+
+      - name: list files for test
+        run: ls -R .
 
       - name: Publish Test Results
         uses: dorny/test-reporter@v1

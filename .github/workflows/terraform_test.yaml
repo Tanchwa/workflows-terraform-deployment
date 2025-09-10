@@ -288,7 +288,7 @@ jobs:
           name: Terraform Test Results
           path: '**/*-results.xml'
           reporter: java-junit
-          working-directory: ${{ github.workspace }}
+          working-directory: ${{ inputs.working_directory }}
 
       - name: Generate Test Summary
         run: |

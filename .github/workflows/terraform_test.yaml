@@ -238,7 +238,6 @@ jobs:
   integration_tests:
     name: Integration Tests
     needs:
-      - setup
       - static_analysis
       - security_compliance
     if: ${{ inputs.test_level == 'integration' }}

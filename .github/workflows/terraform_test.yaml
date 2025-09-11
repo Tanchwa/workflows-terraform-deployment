@@ -315,9 +315,9 @@ jobs:
           || echo "No cost estimate generated" >> $GITHUB_STEP_SUMMARY
 
           echo \
-          ```plaintext \
-          $(cat */static-analysis-*/cost-table.txt || echo "") \
-          ``` \
+          "```plaintext \
+          $(cat */static-analysis-*/cost-table.txt) || echo "" \
+          ```" \
           >> $GITHUB_STEP_SUMMARY
           echo "<br />" >> $GITHUB_STEP_SUMMARY
 

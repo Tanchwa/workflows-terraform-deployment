@@ -125,12 +125,14 @@ jobs:
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      - name: Generate Cost Estimate
+      - name: Generate Base Cost Estimate
         run: |
           infracost breakdown --path . --format json --out-file tests/infracost.json || true
           if [ -f tests/infracost.json ]; then
             infracost output --path tests/infracost.json --format github-comment --out-file tests/cost-comment.md
+            infracost output --path tests/infracost.json --format table --out-file tests/cost-table.txt
           fi
+
 
       - name: Publish Cost Comment to PR
         run: |
@@ -311,6 +313,8 @@ jobs:
           echo "## Static Cost Estimate" >> $GITHUB_STEP_SUMMARY
           cat */static-analysis-*/cost-comment.md >> $GITHUB_STEP_SUMMARY \
           || echo "No cost estimate generated" >> $GITHUB_STEP_SUMMARY
+          cat */static-analysis-*/cost-table.txt >> $GITHUB_STEP_SUMMARY || true \
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## Terraform Testing Framework Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

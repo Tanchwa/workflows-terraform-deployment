@@ -140,6 +140,7 @@ jobs:
         -out=tfplan && \
         echo "Terraform plan created successfully." && \
         echo "::setOutput name=plan_file::$(cat tfplan)"
+        echo "::setOutput name=plan_text::$(terraform show tfplan)"
 
     - name: Publish Plan as PR Comment
       uses: mshick/add-pr-comment@v2
@@ -149,5 +150,5 @@ jobs:
           ## Terraform Plan
           ### Terraform Plan Output
           ```plaintext
-          $(terraform show ${{ steps.plan.outputs.plan_file }})
+          ${{ steps.plan.outputs.plan_text }})
           ```

@@ -312,14 +312,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### Static Cost Estimate" >> $GITHUB_STEP_SUMMARY
-          cat */static-analysis-*/cost-comment.md >> $GITHUB_STEP_SUMMARY
-          
+          ls -la */static-analysis-*
+
           # Count test files
           STATIC_TESTS=$(find test-results -name "*-results.xml" -path "*/static-analysis-*" | wc -l)
           #SECURITY_TESTS=$(find test-results -name "*-results.xml" -path "*/security-compliance-*" | wc -l)
           UNIT_TESTS=$(find test-results -name "*-results.xml" -path "*/unit-tests-*" | wc -l)
           INTEGRATION_TESTS=$(find test-results -name "*-results.xml" -path "*/integration-tests-*" | wc -l)
-          
+
           echo "| Test Type | Files Processed |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|-----------------|" >> $GITHUB_STEP_SUMMARY
           echo "| Static Analysis | $STATIC_TESTS |" >> $GITHUB_STEP_SUMMARY

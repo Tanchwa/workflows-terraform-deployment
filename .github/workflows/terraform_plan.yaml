@@ -139,14 +139,7 @@ jobs:
         terraform plan -input=false \
         -out=tfplan && \
         echo "Terraform plan created successfully." && \
-        echo "::setOutput name=plan_file::$(cat tfplan)" && \
-        terraform show -no-color tfplan > terraform_plan.txt && \
-        echo "::set-output name=plan_text::$(cat terraform_plan.txt)"
-
-    - name: test tf
-      run: |
-        echo "${{ steps.plan.outputs.plan_file }}"
-
+        echo "plan_file=$(cat tfplan)" >> $GITHUB_OUTPUT
 
     - name: Publish Plan as PR Comment
       uses: mshick/add-pr-comment@v2
@@ -156,5 +149,5 @@ jobs:
           ## Terraform Plan
           ### Terraform Plan Output
           ```plaintext
-          ${{ steps.plan.outputs.plan_text }}
+          ${{ steps.plan.outputs.plan_file }}
           ```

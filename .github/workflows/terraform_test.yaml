@@ -285,6 +285,15 @@ jobs:
         with:
           path: test-results
 
+      - name: Publish Cost Comment
+        run: |
+            infracost comment github \
+            --path=/tmp/infracost.json \
+            --repo=${{ github.repository }} \
+            --github-token=${{ github.token }} \
+            --pull-request=${{ github.event.pull_request.number }} \
+            --behavior=update
+
       - name: Publish Test Results
         uses: dorny/test-reporter@v2
         if: success() || failure()

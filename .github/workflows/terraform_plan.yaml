@@ -143,6 +143,10 @@ jobs:
         terraform show -no-color tfplan > terraform_plan.txt && \
         echo "::set-output name=plan_text::$(cat terraform_plan.txt)"
 
+    - name: test tf
+      run: |
+        echo "${{ steps.plan.outputs.plan_file }}"
+
 
     - name: Publish Plan as PR Comment
       uses: mshick/add-pr-comment@v2

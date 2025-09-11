@@ -258,7 +258,6 @@ jobs:
     name: Integration Tests
     needs:
       - static_analysis
-      - security_compliance
     if: ${{ inputs.test_level == 'integration' }}
     uses: ./.github/workflows/terraform_plan.yaml
     permissions:

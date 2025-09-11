@@ -72,7 +72,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3.1.2
       with:
-        terraform_version: terraform-plan/tfplan
+        terraform_version: ${{ inputs.terraform_version }}
 
     - name: Authenticate Azure
       if: needs.determine_provider.outputs.azure == 'true'

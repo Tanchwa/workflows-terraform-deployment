@@ -130,7 +130,7 @@ jobs:
           infracost breakdown --path . --format json --out-file tests/infracost.json || true
           if [ -f tests/infracost.json ]; then
             infracost output --path tests/infracost.json --format github-comment --out-file tests/cost-comment.md
-            infracost output --path tests/infracost.json --format html --out-file tests/cost-table.html
+            infracost output --path tests/infracost.json --format table --out-file tests/cost-table.txt
           fi
 
 
@@ -313,8 +313,13 @@ jobs:
           echo "## Static Cost Estimate" >> $GITHUB_STEP_SUMMARY
           cat */static-analysis-*/cost-comment.md >> $GITHUB_STEP_SUMMARY \
           || echo "No cost estimate generated" >> $GITHUB_STEP_SUMMARY
-          cat */static-analysis-*/cost-table.html >> $GITHUB_STEP_SUMMARY || true
-          echo "\n" >> $GITHUB_STEP_SUMMARY
+
+          echo \
+          ```plaintext \
+          $(cat */static-analysis-*/cost-table.txt || echo "") \
+          ``` \
+          >> $GITHUB_STEP_SUMMARY
+          echo "<br />" >> $GITHUB_STEP_SUMMARY
 
           echo "## Terraform Testing Framework Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

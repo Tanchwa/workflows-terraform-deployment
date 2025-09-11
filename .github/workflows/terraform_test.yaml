@@ -132,6 +132,17 @@ jobs:
             infracost output --path tests/infracost.json --format github-comment --out-file tests/cost-comment.md
           fi
 
+      - name: Publish Cost Comment to PR
+        run: |
+            infracost comment github \
+            --path=tests/infracost.json \
+            --repo=${{ github.repository }} \
+            --github-token=${{ github.token }} \
+            --pull-request=${{ github.event.pull_request.number }} \
+            --behavior=update
+
+
+
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
@@ -285,15 +296,6 @@ jobs:
         with:
           path: test-results
 
-      - name: Publish Cost Comment
-        run: |
-            infracost comment github \
-            --path=/tmp/infracost.json \
-            --repo=${{ github.repository }} \
-            --github-token=${{ github.token }} \
-            --pull-request=${{ github.event.pull_request.number }} \
-            --behavior=update
-
       - name: Publish Test Results
         uses: dorny/test-reporter@v2
         if: success() || failure()
@@ -308,6 +310,9 @@ jobs:
         run: |
           echo "## Terraform Testing Framework Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Static Cost Estimate" >> $GITHUB_STEP_SUMMARY
+          echo $(cat */static-analysis-*/cost-comment.md) >> $GITHUB_STEP_SUMMARY
           
           # Count test files
           STATIC_TESTS=$(find test-results -name "*-results.xml" -path "*/static-analysis-*" | wc -l)

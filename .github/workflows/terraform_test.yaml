@@ -316,9 +316,9 @@ jobs:
 
           if ls */static-analysis-*/cost-table.txt >/dev/null 2>&1; then
             {
-              echo '```plaintext\n'
+              echo '```plaintext  '
               cat */static-analysis-*/cost-table.txt
-              echo '\n```\n'
+              echo '```  '
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 

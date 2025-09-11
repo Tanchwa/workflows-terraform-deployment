@@ -271,6 +271,7 @@ jobs:
     with:
       terraform_version: ${{ inputs.terraform_version }}
       working_directory: ${{ inputs.working_directory }}
+      post_pr_comment: true
 
   test_results:
     name: Test Results & Reporting

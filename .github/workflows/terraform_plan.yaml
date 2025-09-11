@@ -13,6 +13,11 @@ on:
         required: true
         default: '.'
         type: string
+      post_pr_comment:
+        description: 'Whether to post the plan output as a comment on the PR'
+        required: false
+        default: false
+        type: boolean
     secrets:
       ARM_CLIENT_ID:
         required: false
@@ -135,3 +140,14 @@ jobs:
         -out=tfplan && \
         echo "Terraform plan created successfully." && \
         echo "::setOutput name=plan_file::$(cat tfplan)"
+
+    - name: Publish Plan as PR Comment
+      uses: mshick/add-pr-comment@v2
+      if: ${{ input.post_pr_comment }}
+      with:
+        message: |
+          ## :terraform: Terraform Plan
+          ### :terraform: Terraform Plan Output
+          ```plaintext
+          ${{ steps.plan.outputs.plan_file }}
+          ```

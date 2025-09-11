@@ -133,4 +133,4 @@ jobs:
     - name: Terraform Apply
       if: github.event.pull_request.merged && github.base_ref == 'main'
       run: |
-        terraform apply terraform-plan/tfplan -auto-approve -input=false
+        terraform apply -auto-approve -input=false terraform-plan/tfplan

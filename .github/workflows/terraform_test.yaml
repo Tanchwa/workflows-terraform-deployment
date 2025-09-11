@@ -266,9 +266,18 @@ jobs:
       pull-requests: write
       id-token: write
     secrets:
-      AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
-      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      AZ_STATE_STORE: ${{ secrets.AZ_STATE_STORE }}
+      AZ_STATE_CONTAINER: ${{ secrets.AZ_STATE_CONTAINER }}
+      AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
+      AWS_STATE_BUCKET: ${{ secrets.AWS_STATE_BUCKET }}
+      AWS_STATE_REGION: ${{ secrets.AWS_STATE_REGION }}
+      GOOGLE_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+      GOOGLE_STATE_BUCKET: ${{ secrets.GOOGLE_STATE_BUCKET }}
+
     with:
       terraform_version: ${{ inputs.terraform_version }}
       working_directory: ${{ inputs.working_directory }}

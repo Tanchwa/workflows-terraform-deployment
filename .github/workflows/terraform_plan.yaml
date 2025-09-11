@@ -139,7 +139,9 @@ jobs:
         terraform plan -input=false -out=tfplan && \
         echo "Terraform plan created successfully." && \
         terraform show -no-color tfplan > plan.txt && \
-        echo "plan_file=$(cat plan.txt)" >> $GITHUB_OUTPUT
+        echo "plan_file<<EOF" >> $GITHUB_OUTPUT
+        echo "$(cat plan.txt)" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Publish Plan as Artifact
       uses: actions/upload-artifact@v4

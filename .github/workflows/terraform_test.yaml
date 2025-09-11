@@ -314,11 +314,7 @@ jobs:
           cat */static-analysis-*/cost-comment.md >> $GITHUB_STEP_SUMMARY \
           || echo "No cost estimate generated" >> $GITHUB_STEP_SUMMARY
 
-          echo \
-          "```plaintext \
-          $(cat */static-analysis-*/cost-table.txt) || echo "" \
-          ```" \
-          >> $GITHUB_STEP_SUMMARY
+          cat */static-analysis-*/cost-table.txt || echo "" >> $GITHUB_STEP_SUMMARY
           echo "<br />" >> $GITHUB_STEP_SUMMARY
 
           echo "## Terraform Testing Framework Results" >> $GITHUB_STEP_SUMMARY

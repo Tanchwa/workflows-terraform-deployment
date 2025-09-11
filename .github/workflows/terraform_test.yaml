@@ -308,12 +308,12 @@ jobs:
 
       - name: Generate Test Summary
         run: |
-          echo "## Terraform Testing Framework Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          echo "### Static Cost Estimate" >> $GITHUB_STEP_SUMMARY
+          echo "## Static Cost Estimate" >> $GITHUB_STEP_SUMMARY
           cat */static-analysis-*/cost-comment.md >> $GITHUB_STEP_SUMMARY \
           || echo "No cost estimate generated" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Terraform Testing Framework Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
           # Count test files
           STATIC_TESTS=$(find test-results -name "*-results.xml" -path "*/static-analysis-*" | wc -l)

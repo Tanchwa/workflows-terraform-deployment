@@ -2,6 +2,11 @@ name: _determine_provider
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        description: 'GitHub Environment to use'
+        required: true
+        type: string
     secrets:
       AWS_IAM_ROLE_ARN:
         required: false
@@ -18,11 +23,12 @@ on:
         value: ${{ jobs.provider.outputs.azure}}
 jobs:
   provider:
+    environment: ${{ inputs.environment }}
     env:
       GCP: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       AWS: ${{ secrets.AWS_IAM_ROLE_ARN }}
       AZURE: ${{ secrets.ARM_CLIENT_ID }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, x64]
     outputs:
       gcp: ${{ steps.gcp.outputs.gcp}}
       aws: ${{ steps.aws.outputs.aws}}

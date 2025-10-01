@@ -3,6 +3,10 @@ name: terraform_destroy
 on:
   workflow_call:
     inputs:
+      environment:
+        description: 'GitHub Environment to use'
+        required: true
+        type: string
       terraform_version:
         description: 'Terraform version to use'
         required: true
@@ -19,6 +23,8 @@ on:
       ARM_TENANT_ID:
         required: false
       ARM_SUBSCRIPTION_ID:
+        required: false
+      AZ_RESOURCE_GROUP_NAME:
         required: false
       AZ_STATE_STORE:
         required: false
@@ -44,9 +50,12 @@ jobs:
       AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
       GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    with:
+      environment: ${{ inputs.environment }}
   terraform:
+    environment: ${{ inputs.environment }}
     name: 'Terraform Destroy'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, x64]
     needs: 
       - determine_provider
     permissions:
@@ -85,6 +94,8 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       run: |
         terraform init \
+        -backend-config="use_azuread_auth=true" \
+        -backend-config="resource_group_name=${{ secrets.AZ_RESOURCE_GROUP_NAME }}" \
         -backend-config="storage_account_name=${{ secrets.AZ_STATE_STORE }}" \
         -backend-config="container_name=${{ secrets.AZ_STATE_CONTAINER }}" \
         -backend-config="key=terraform.tfstate" \
@@ -124,4 +135,3 @@ jobs:
 
     - name: Terraform Destroy
       run: terraform destroy -auto-approve -input=false
-

@@ -376,6 +376,8 @@ jobs:
       working_directory: ${{ inputs.working_directory }}
       post_pr_comment: true
       environment: ${{ inputs.environment }}
+      tf_vars_artifact: ${{ inputs.tf_vars_artifact }}
+      tf_vars_filename: ${{ inputs.tf_vars_filename }}
 
   test_results:
     name: Test Results & Reporting

@@ -175,6 +175,8 @@ jobs:
         echo "plan_file<<EOF" >> $GITHUB_OUTPUT
         echo "$(cat plan.txt)" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
     - name: Publish Plan as Artifact
       uses: actions/upload-artifact@v4

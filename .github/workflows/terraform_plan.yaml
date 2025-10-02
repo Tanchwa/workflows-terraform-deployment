@@ -3,6 +3,10 @@ name: terraform_plan
 on:
   workflow_call:
     inputs:
+      environment:
+        description: 'GitHub Environment to use'
+        required: true
+        type: string
       terraform_version:
         description: 'Terraform version to use'
         required: true
@@ -12,6 +16,16 @@ on:
         description: 'Directory containing Terraform configuration files'
         required: true
         default: '.'
+        type: string
+      tf_vars_artifact:
+        description: 'Name of the tfvars artifact to download and use'
+        required: false
+        default: ''
+        type: string
+      tf_vars_filename:
+        description: 'Name of the tfvars file to use in the plan command'
+        required: false
+        default: ''
         type: string
       post_pr_comment:
         description: 'Whether to post the plan output as a comment on the PR'
@@ -24,6 +38,8 @@ on:
       ARM_TENANT_ID:
         required: false
       ARM_SUBSCRIPTION_ID:
+        required: false
+      AZ_RESOURCE_GROUP_NAME:
         required: false
       AZ_STATE_STORE:
         required: false
@@ -49,7 +65,10 @@ jobs:
       AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
       GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    with:
+      environment: ${{ inputs.environment }}
   terraform:
+    environment: ${{ inputs.environment }}
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
     needs: 
@@ -90,6 +109,8 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       run: |
         terraform init \
+        -backend-config="use_azuread_auth=true" \
+        -backend-config="resource_group_name=${{ secrets.AZ_RESOURCE_GROUP_NAME }}" \
         -backend-config="storage_account_name=${{ secrets.AZ_STATE_STORE }}" \
         -backend-config="container_name=${{ secrets.AZ_STATE_CONTAINER }}" \
         -backend-config="key=terraform.tfstate" \
@@ -130,11 +151,19 @@ jobs:
         -backend-config="prefix=terraform/state" 
 
 
+    - name: Download tfvars Artifact
+      if: ${{ inputs.tf_vars_artifact != '' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.tf_vars_artifact }}
+        path: .
+
+
     ## we run the same plan command for all providers to get the plan output
     - name: Terraform Plan
       id: plan
       run: |
-        terraform plan -input=false -out=tfplan && \
+        terraform plan -input=false -var-file=${{ inputs.tf_vars_filename }} -out=tfplan && \
         echo "Terraform plan created successfully." && \
         terraform show -no-color tfplan > plan.txt && \
         echo "plan_file<<EOF" >> $GITHUB_OUTPUT

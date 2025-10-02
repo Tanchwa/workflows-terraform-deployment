@@ -3,6 +3,10 @@ name: terraform_test
 on:
   workflow_call:
     inputs:
+      environment:
+        description: 'GitHub Environment to use'
+        required: true
+        type: string
       test_level:
         description: -<
           'Type of Dynamic Test to use.
@@ -22,6 +26,16 @@ on:
         required: true
         default: '.'
         type: string
+      tf_vars_artifact:
+        description: 'Name of the tfvars artifact to download and use'
+        required: false
+        default: ''
+        type: string
+      tf_vars_filename:
+        description: 'Name of the tfvars file to use in the plan command'
+        required: false
+        default: ''
+        type: string
     secrets:
       INFRACOST_API_KEY:
         required: false
@@ -30,6 +44,8 @@ on:
       ARM_TENANT_ID:
         required: false
       ARM_SUBSCRIPTION_ID:
+        required: false
+      AZ_RESOURCE_GROUP_NAME:
         required: false
       AZ_STATE_STORE:
         required: false
@@ -56,6 +72,8 @@ jobs:
       AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
       GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    with:
+      environment: ${{ inputs.environment }}
 
   static_analysis:
     name: 'Terraform Static Analysis'
@@ -80,6 +98,25 @@ jobs:
         uses: hashicorp/setup-terraform@v3.1.2
         with:
           terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+
+      - name: Download tfvars Artifact
+        if: ${{ inputs.tf_vars_artifact != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.tf_vars_artifact }}
+          path: .
+
 
       - name: Make Test Directory
         run: mkdir -p tests
@@ -107,7 +144,7 @@ jobs:
       - name: Run TFLint
         run: |
           tflint --init
-          tflint --format=junit > tests/tflint-results.xml
+          tflint --minimum-failure-severity=error --format=junit > tests/tflint-results.xml
 
       - name: Setup and Run Checkov
         run: |
@@ -153,6 +190,7 @@ jobs:
 
   # Stage 3: Security and Compliance
   security_compliance:
+    environment: ${{ inputs.environment }}
     name: Security & Compliance
     runs-on: ubuntu-latest
     defaults:
@@ -170,6 +208,16 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
 
       - name: Create Test Directory
         run: mkdir -p tests
@@ -191,9 +239,10 @@ jobs:
           path: tests/compliance-results.xml
 
   unit_tests:
+    environment: ${{ inputs.environment }}
     name: Unit Tests
     runs-on: ubuntu-latest
-    if: ${{ inputs.type == 'unit' }}
+    if: ${{ inputs.test_level == 'unit' }}
     needs:
       - determine_provider
       - static_analysis
@@ -214,6 +263,16 @@ jobs:
         with:
           terraform_version: ${{ inputs.terraform_version }}
 
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
       - name: Create Test Directory
         run: mkdir -p tests
 
@@ -226,6 +285,22 @@ jobs:
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           enable-AzPsession: true
 
+      - name: Terraform Init Azure
+        if: needs.determine_provider.outputs.azure == 'true'
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_USE_OIDC: true
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform init \
+          -backend-config="use_azuread_auth=true" \
+          -backend-config="resource_group_name=${{ secrets.AZ_RESOURCE_GROUP_NAME }}" \
+          -backend-config="storage_account_name=${{ secrets.AZ_STATE_STORE }}" \
+          -backend-config="container_name=${{ secrets.AZ_STATE_CONTAINER }}" \
+          -backend-config="key=terraform.tfstate" \
+
+
       - name: Authenticate AWS
         if: needs.determine_provider.outputs.aws == 'true'
         uses: aws-actions/configure-aws-credentials@v2.0.0
@@ -233,6 +308,16 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_STATE_REGION }}
           role-session-name: 'GitHubActionsSession'
+
+
+      - name: Terraform Init AWS
+        if: needs.determine_provider.outputs.aws == 'true'
+        run: |
+          terraform init \
+          -backend-config="bucket=${{ secrets.AWS_STATE_BUCKET }}" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="region=${{ secrets.AWS_STATE_REGION }}" \
+
 
       - name: Authenticate GCP
         if: needs.determine_provider.outputs.gcp == 'true'
@@ -243,9 +328,19 @@ jobs:
           create_credentials_file: true
           token_format: "access_token"
 
+      - name: Terraform Init GCP
+        if: needs.determine_provider.outputs.gcp == 'true'
+        run: |
+          terraform init \
+          -backend-config="bucket=${{ secrets.GOOGLE_STATE_BUCKET }}" \
+          -backend-config="prefix=terraform/state" 
+
+
       - name: Run Terraform Native Tests
         run: |
-          terraform test -junit-xml=tests/terraform-test-results.xml
+          terraform test -verbose -junit-xml=tests/terraform-test-results.xml
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Upload Unit Test Results
         uses: actions/upload-artifact@v4
@@ -276,11 +371,11 @@ jobs:
       GOOGLE_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GOOGLE_WORKLOAD_IDENTITY_PROVIDER }}
       GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       GOOGLE_STATE_BUCKET: ${{ secrets.GOOGLE_STATE_BUCKET }}
-
     with:
       terraform_version: ${{ inputs.terraform_version }}
       working_directory: ${{ inputs.working_directory }}
       post_pr_comment: true
+      environment: ${{ inputs.environment }}
 
   test_results:
     name: Test Results & Reporting

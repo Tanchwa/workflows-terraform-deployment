@@ -28,7 +28,7 @@ jobs:
       GCP: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
       AWS: ${{ secrets.AWS_IAM_ROLE_ARN }}
       AZURE: ${{ secrets.ARM_CLIENT_ID }}
-    runs-on: [self-hosted, Linux, x64]
+    runs-on: ubuntu-latest
     outputs:
       gcp: ${{ steps.gcp.outputs.gcp}}
       aws: ${{ steps.aws.outputs.aws}}

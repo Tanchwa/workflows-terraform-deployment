@@ -17,6 +17,16 @@ on:
         required: true
         default: '.'
         type: string
+      tf_vars_artifact:
+        description: 'Name of the tfvars artifact to download and use'
+        required: false
+        default: ''
+        type: string
+      tf_vars_filename:
+        description: 'Name of the tfvars file to use in the plan command'
+        required: false
+        default: ''
+        type: string
       post_pr_comment:
         description: 'Whether to post the plan output as a comment on the PR'
         required: false
@@ -60,7 +70,7 @@ jobs:
   terraform:
     environment: ${{ inputs.environment }}
     name: 'Terraform Plan'
-    runs-on: [self-hosted, Linux, x64]
+    runs-on: ubuntu-latest
     needs: 
       - determine_provider
     permissions:
@@ -141,11 +151,19 @@ jobs:
         -backend-config="prefix=terraform/state" 
 
 
+    - name: Download tfvars Artifact
+      if: ${{ inputs.tf_vars_artifact != '' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.tf_vars_artifact }}
+        path: .
+
+
     ## we run the same plan command for all providers to get the plan output
     - name: Terraform Plan
       id: plan
       run: |
-        terraform plan -input=false -out=tfplan && \
+        terraform plan -input=false -var-file=${{ inputs.tf_vars_filename }} -out=tfplan && \
         echo "Terraform plan created successfully." && \
         terraform show -no-color tfplan > plan.txt && \
         echo "plan_file<<EOF" >> $GITHUB_OUTPUT

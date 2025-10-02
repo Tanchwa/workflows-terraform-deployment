@@ -151,6 +151,12 @@ jobs:
         -backend-config="prefix=terraform/state" 
 
 
+    - name: Test tfvars input
+      run: |
+        echo "Testing tfvars input"
+        echo "tf_vars_artifact: ${{ inputs.tf_vars_artifact }}"
+        echo "tf_vars_filename: ${{ inputs.tf_vars_filename }}"
+
     - name: Download tfvars Artifact
       if: ${{ inputs.tf_vars_artifact != '' }}
       uses: actions/download-artifact@v4

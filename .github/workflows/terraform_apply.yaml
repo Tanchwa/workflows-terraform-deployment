@@ -161,7 +161,7 @@ jobs:
         path: .
 
     - name: Terraform Apply
-      if: github.event.pull_request.merged && github.base_ref == 'main'
+      if: ( github.event.pull_request.merged && github.base_ref == 'main' ) || github.ref == 'main'
       run: |
         terraform apply -auto-approve -var-file=${{ inputs.tf_vars_filename }} -input=false terraform-plan/tfplan
       env:

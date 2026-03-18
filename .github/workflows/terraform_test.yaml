@@ -149,7 +149,7 @@ jobs:
       - name: Setup and Run Checkov
         run: |
           pip install checkov
-          checkov -d . --framework terraform --output junit --output-file tests/checkov-results.xml || true
+          checkov -d . --framework terraform --output junitxml --output-file tests/checkov-results.xml || true
 
       - name: Setup and Run TFSec
         run: |
